@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.InventoryLogMapper">
+    <sql id="columns">id, sku_id, change_type, quantity_change, stock_after, locked_stock_after, biz_type, biz_id, note, created_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.InventoryLog">SELECT <include refid="columns" /> FROM inventory_logs WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.InventoryLog">SELECT <include refid="columns" /> FROM inventory_logs</select>
+    <select id="selectBySkuIdPage" resultType="com.itye.mall.entity.InventoryLog">
+        SELECT <include refid="columns" />
+        FROM inventory_logs
+        WHERE sku_id = #{skuId}
+        ORDER BY id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countBySkuId" resultType="long">
+        SELECT COUNT(*) FROM inventory_logs WHERE sku_id = #{skuId}
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.InventoryLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO inventory_logs
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="skuId != null">sku_id,</if><if test="changeType != null">change_type,</if><if test="quantityChange != null">quantity_change,</if><if test="stockAfter != null">stock_after,</if><if test="lockedStockAfter != null">locked_stock_after,</if><if test="bizType != null">biz_type,</if><if test="bizId != null">biz_id,</if><if test="note != null">note,</if><if test="createdAt != null">created_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="skuId != null">#{skuId},</if><if test="changeType != null">#{changeType},</if><if test="quantityChange != null">#{quantityChange},</if><if test="stockAfter != null">#{stockAfter},</if><if test="lockedStockAfter != null">#{lockedStockAfter},</if><if test="bizType != null">#{bizType},</if><if test="bizId != null">#{bizId},</if><if test="note != null">#{note},</if><if test="createdAt != null">#{createdAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.InventoryLog">
+        UPDATE inventory_logs
+        <set><if test="skuId != null">sku_id = #{skuId},</if><if test="changeType != null">change_type = #{changeType},</if><if test="quantityChange != null">quantity_change = #{quantityChange},</if><if test="stockAfter != null">stock_after = #{stockAfter},</if><if test="lockedStockAfter != null">locked_stock_after = #{lockedStockAfter},</if><if test="bizType != null">biz_type = #{bizType},</if><if test="bizId != null">biz_id = #{bizId},</if><if test="note != null">note = #{note},</if><if test="createdAt != null">created_at = #{createdAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM inventory_logs WHERE id = #{id}</delete>
+</mapper>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.UserCouponMapper">
+    <sql id="columns">id, user_id, coupon_id, status, order_id, claimed_at, used_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.UserCoupon">SELECT <include refid="columns" /> FROM user_coupons WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.UserCoupon">SELECT <include refid="columns" /> FROM user_coupons</select>
+    <select id="selectByUserId" resultType="com.itye.mall.entity.UserCoupon">
+        SELECT <include refid="columns" />
+        FROM user_coupons
+        WHERE user_id = #{userId}
+        <if test="status != null">AND status = #{status}</if>
+        ORDER BY id DESC
+    </select>
+    <select id="selectByOrderId" resultType="com.itye.mall.entity.UserCoupon">
+        SELECT <include refid="columns" />
+        FROM user_coupons
+        WHERE order_id = #{orderId}
+    </select>
+    <select id="countByUserIdAndCouponId" resultType="long">
+        SELECT COUNT(*) FROM user_coupons WHERE user_id = #{userId} AND coupon_id = #{couponId}
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.UserCoupon" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_coupons
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="userId != null">user_id,</if><if test="couponId != null">coupon_id,</if><if test="status != null">status,</if><if test="orderId != null">order_id,</if><if test="claimedAt != null">claimed_at,</if><if test="usedAt != null">used_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="userId != null">#{userId},</if><if test="couponId != null">#{couponId},</if><if test="status != null">#{status},</if><if test="orderId != null">#{orderId},</if><if test="claimedAt != null">#{claimedAt},</if><if test="usedAt != null">#{usedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.UserCoupon">
+        UPDATE user_coupons
+        <set><if test="userId != null">user_id = #{userId},</if><if test="couponId != null">coupon_id = #{couponId},</if><if test="status != null">status = #{status},</if><if test="orderId != null">order_id = #{orderId},</if><if test="claimedAt != null">claimed_at = #{claimedAt},</if><if test="usedAt != null">used_at = #{usedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <update id="markUsed">
+        UPDATE user_coupons
+        SET status = 20,
+            order_id = #{orderId},
+            used_at = NOW()
+        WHERE id = #{id}
+          AND user_id = #{userId}
+          AND status = 10
+    </update>
+    <update id="releaseByOrderId">
+        UPDATE user_coupons
+        SET status = 10,
+            order_id = NULL,
+            used_at = NULL
+        WHERE order_id = #{orderId}
+          AND status = 20
+    </update>
+    <delete id="deleteById">DELETE FROM user_coupons WHERE id = #{id}</delete>
+</mapper>

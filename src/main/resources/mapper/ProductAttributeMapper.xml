@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.ProductAttributeMapper">
+    <sql id="columns">id, category_id, name, input_type, options_json, is_required, sort_order, created_at, updated_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.ProductAttribute">SELECT <include refid="columns" /> FROM product_attributes WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.ProductAttribute">SELECT <include refid="columns" /> FROM product_attributes</select>
+    <insert id="insert" parameterType="com.itye.mall.entity.ProductAttribute" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product_attributes
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="categoryId != null">category_id,</if><if test="name != null">name,</if><if test="inputType != null">input_type,</if><if test="optionsJson != null">options_json,</if><if test="isRequired != null">is_required,</if><if test="sortOrder != null">sort_order,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="categoryId != null">#{categoryId},</if><if test="name != null">#{name},</if><if test="inputType != null">#{inputType},</if><if test="optionsJson != null">#{optionsJson},</if><if test="isRequired != null">#{isRequired},</if><if test="sortOrder != null">#{sortOrder},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.ProductAttribute">
+        UPDATE product_attributes
+        <set><if test="categoryId != null">category_id = #{categoryId},</if><if test="name != null">name = #{name},</if><if test="inputType != null">input_type = #{inputType},</if><if test="optionsJson != null">options_json = #{optionsJson},</if><if test="isRequired != null">is_required = #{isRequired},</if><if test="sortOrder != null">sort_order = #{sortOrder},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM product_attributes WHERE id = #{id}</delete>
+</mapper>

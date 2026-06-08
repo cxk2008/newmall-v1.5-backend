@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.ProductSkuMapper">
+    <sql id="columns">id, product_id, sku_code, name, image_url, spec_json, sale_price, market_price, cost_price, weight_gram, stock, locked_stock, low_stock_threshold, status, created_at, updated_at, deleted_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.ProductSku">SELECT <include refid="columns" /> FROM product_skus WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.ProductSku">SELECT <include refid="columns" /> FROM product_skus</select>
+    <select id="selectEnabledByProductId" resultType="com.itye.mall.entity.ProductSku">
+        SELECT <include refid="columns" />
+        FROM product_skus
+        WHERE product_id = #{productId} AND status = 1 AND deleted_at IS NULL
+        ORDER BY id ASC
+    </select>
+    <select id="selectByProductId" resultType="com.itye.mall.entity.ProductSku">
+        SELECT <include refid="columns" />
+        FROM product_skus
+        WHERE product_id = #{productId} AND deleted_at IS NULL
+        ORDER BY id ASC
+    </select>
+    <select id="countEnabledByProductId" resultType="long">
+        SELECT COUNT(*) FROM product_skus WHERE product_id = #{productId} AND status = 1 AND deleted_at IS NULL
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.ProductSku" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product_skus
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="productId != null">product_id,</if><if test="skuCode != null">sku_code,</if><if test="name != null">name,</if><if test="imageUrl != null">image_url,</if><if test="specJson != null">spec_json,</if><if test="salePrice != null">sale_price,</if><if test="marketPrice != null">market_price,</if><if test="costPrice != null">cost_price,</if><if test="weightGram != null">weight_gram,</if><if test="stock != null">stock,</if><if test="lockedStock != null">locked_stock,</if><if test="lowStockThreshold != null">low_stock_threshold,</if><if test="status != null">status,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if><if test="deletedAt != null">deleted_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="productId != null">#{productId},</if><if test="skuCode != null">#{skuCode},</if><if test="name != null">#{name},</if><if test="imageUrl != null">#{imageUrl},</if><if test="specJson != null">#{specJson},</if><if test="salePrice != null">#{salePrice},</if><if test="marketPrice != null">#{marketPrice},</if><if test="costPrice != null">#{costPrice},</if><if test="weightGram != null">#{weightGram},</if><if test="stock != null">#{stock},</if><if test="lockedStock != null">#{lockedStock},</if><if test="lowStockThreshold != null">#{lowStockThreshold},</if><if test="status != null">#{status},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if><if test="deletedAt != null">#{deletedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.ProductSku">
+        UPDATE product_skus
+        <set><if test="productId != null">product_id = #{productId},</if><if test="skuCode != null">sku_code = #{skuCode},</if><if test="name != null">name = #{name},</if><if test="imageUrl != null">image_url = #{imageUrl},</if><if test="specJson != null">spec_json = #{specJson},</if><if test="salePrice != null">sale_price = #{salePrice},</if><if test="marketPrice != null">market_price = #{marketPrice},</if><if test="costPrice != null">cost_price = #{costPrice},</if><if test="weightGram != null">weight_gram = #{weightGram},</if><if test="stock != null">stock = #{stock},</if><if test="lockedStock != null">locked_stock = #{lockedStock},</if><if test="lowStockThreshold != null">low_stock_threshold = #{lowStockThreshold},</if><if test="status != null">status = #{status},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">UPDATE product_skus SET deleted_at = NOW(), updated_at = NOW() WHERE id = #{id}</delete>
+    <update id="increaseStock">
+        UPDATE product_skus
+        SET stock = stock + #{quantity}, updated_at = NOW()
+        WHERE id = #{skuId}
+          AND deleted_at IS NULL
+    </update>
+    <update id="decreaseStock">
+        UPDATE product_skus
+        SET stock = stock - #{quantity}, updated_at = NOW()
+        WHERE id = #{skuId}
+          AND deleted_at IS NULL
+          AND stock - locked_stock >= #{quantity}
+    </update>
+    <update id="lockStock">
+        UPDATE product_skus
+        SET locked_stock = locked_stock + #{quantity}
+        WHERE id = #{skuId}
+          AND status = 1
+          AND deleted_at IS NULL
+          AND stock - locked_stock >= #{quantity}
+    </update>
+    <update id="unlockStock">
+        UPDATE product_skus
+        SET locked_stock = locked_stock - #{quantity}
+        WHERE id = #{skuId}
+          AND locked_stock >= #{quantity}
+    </update>
+    <update id="deductLockedStock">
+        UPDATE product_skus
+        SET stock = stock - #{quantity}, locked_stock = locked_stock - #{quantity}
+        WHERE id = #{skuId}
+          AND stock >= #{quantity}
+          AND locked_stock >= #{quantity}
+    </update>
+</mapper>

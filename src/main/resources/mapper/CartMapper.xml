@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.CartMapper">
+    <sql id="columns">id, user_id, created_at, updated_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.Cart">SELECT <include refid="columns" /> FROM carts WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.Cart">SELECT <include refid="columns" /> FROM carts</select>
+    <select id="selectByUserId" resultType="com.itye.mall.entity.Cart">
+        SELECT <include refid="columns" /> FROM carts WHERE user_id = #{userId}
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.Cart" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO carts
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="userId != null">user_id,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="userId != null">#{userId},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.Cart">
+        UPDATE carts
+        <set><if test="userId != null">user_id = #{userId},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM carts WHERE id = #{id}</delete>
+</mapper>

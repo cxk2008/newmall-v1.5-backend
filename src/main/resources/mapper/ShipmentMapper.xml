@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.ShipmentMapper">
+    <sql id="columns">id, order_id, order_no, logistics_company, logistics_no, status, shipped_at, received_at, created_at, updated_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.Shipment">SELECT <include refid="columns" /> FROM shipments WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.Shipment">SELECT <include refid="columns" /> FROM shipments</select>
+    <select id="selectByOrderId" resultType="com.itye.mall.entity.Shipment">
+        SELECT <include refid="columns" /> FROM shipments WHERE order_id = #{orderId} LIMIT 1
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.Shipment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO shipments
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="orderId != null">order_id,</if><if test="orderNo != null">order_no,</if><if test="logisticsCompany != null">logistics_company,</if><if test="logisticsNo != null">logistics_no,</if><if test="status != null">status,</if><if test="shippedAt != null">shipped_at,</if><if test="receivedAt != null">received_at,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="orderId != null">#{orderId},</if><if test="orderNo != null">#{orderNo},</if><if test="logisticsCompany != null">#{logisticsCompany},</if><if test="logisticsNo != null">#{logisticsNo},</if><if test="status != null">#{status},</if><if test="shippedAt != null">#{shippedAt},</if><if test="receivedAt != null">#{receivedAt},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.Shipment">
+        UPDATE shipments
+        <set><if test="orderId != null">order_id = #{orderId},</if><if test="orderNo != null">order_no = #{orderNo},</if><if test="logisticsCompany != null">logistics_company = #{logisticsCompany},</if><if test="logisticsNo != null">logistics_no = #{logisticsNo},</if><if test="status != null">status = #{status},</if><if test="shippedAt != null">shipped_at = #{shippedAt},</if><if test="receivedAt != null">received_at = #{receivedAt},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM shipments WHERE id = #{id}</delete>
+</mapper>

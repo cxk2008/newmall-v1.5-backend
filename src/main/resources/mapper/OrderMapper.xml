@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.OrderMapper">
+    <sql id="columns">id, order_no, user_id, status, receiver_name, receiver_phone, receiver_province, receiver_city, receiver_district, receiver_address, product_amount, freight_amount, discount_amount, payable_amount, paid_amount, payment_method, remark, paid_at, shipped_at, completed_at, closed_at, created_at, updated_at, deleted_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.Order">SELECT <include refid="columns" /> FROM orders WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.Order">SELECT <include refid="columns" /> FROM orders</select>
+    <select id="selectByIdAndUserId" resultType="com.itye.mall.entity.Order">
+        SELECT <include refid="columns" /> FROM orders WHERE id = #{id} AND user_id = #{userId} AND deleted_at IS NULL
+    </select>
+    <select id="selectByUserIdPage" resultType="com.itye.mall.entity.Order">
+        SELECT <include refid="columns" />
+        FROM orders
+        WHERE user_id = #{userId} AND deleted_at IS NULL
+        <if test="status != null">AND status = #{status}</if>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*)
+        FROM orders
+        WHERE user_id = #{userId} AND deleted_at IS NULL
+        <if test="status != null">AND status = #{status}</if>
+    </select>
+    <select id="selectAdminPage" resultType="com.itye.mall.entity.Order">
+        SELECT <include refid="columns" />
+        FROM orders
+        WHERE deleted_at IS NULL
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND (order_no LIKE CONCAT('%', #{keyword}, '%') OR receiver_name LIKE CONCAT('%', #{keyword}, '%') OR receiver_phone LIKE CONCAT('%', #{keyword}, '%'))</if>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAdmin" resultType="long">
+        SELECT COUNT(*)
+        FROM orders
+        WHERE deleted_at IS NULL
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND (order_no LIKE CONCAT('%', #{keyword}, '%') OR receiver_name LIKE CONCAT('%', #{keyword}, '%') OR receiver_phone LIKE CONCAT('%', #{keyword}, '%'))</if>
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.Order" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="orderNo != null">order_no,</if><if test="userId != null">user_id,</if><if test="status != null">status,</if><if test="receiverName != null">receiver_name,</if><if test="receiverPhone != null">receiver_phone,</if><if test="receiverProvince != null">receiver_province,</if><if test="receiverCity != null">receiver_city,</if><if test="receiverDistrict != null">receiver_district,</if><if test="receiverAddress != null">receiver_address,</if><if test="productAmount != null">product_amount,</if><if test="freightAmount != null">freight_amount,</if><if test="discountAmount != null">discount_amount,</if><if test="payableAmount != null">payable_amount,</if><if test="paidAmount != null">paid_amount,</if><if test="paymentMethod != null">payment_method,</if><if test="remark != null">remark,</if><if test="paidAt != null">paid_at,</if><if test="shippedAt != null">shipped_at,</if><if test="completedAt != null">completed_at,</if><if test="closedAt != null">closed_at,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if><if test="deletedAt != null">deleted_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="orderNo != null">#{orderNo},</if><if test="userId != null">#{userId},</if><if test="status != null">#{status},</if><if test="receiverName != null">#{receiverName},</if><if test="receiverPhone != null">#{receiverPhone},</if><if test="receiverProvince != null">#{receiverProvince},</if><if test="receiverCity != null">#{receiverCity},</if><if test="receiverDistrict != null">#{receiverDistrict},</if><if test="receiverAddress != null">#{receiverAddress},</if><if test="productAmount != null">#{productAmount},</if><if test="freightAmount != null">#{freightAmount},</if><if test="discountAmount != null">#{discountAmount},</if><if test="payableAmount != null">#{payableAmount},</if><if test="paidAmount != null">#{paidAmount},</if><if test="paymentMethod != null">#{paymentMethod},</if><if test="remark != null">#{remark},</if><if test="paidAt != null">#{paidAt},</if><if test="shippedAt != null">#{shippedAt},</if><if test="completedAt != null">#{completedAt},</if><if test="closedAt != null">#{closedAt},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if><if test="deletedAt != null">#{deletedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.Order">
+        UPDATE orders
+        <set><if test="orderNo != null">order_no = #{orderNo},</if><if test="userId != null">user_id = #{userId},</if><if test="status != null">status = #{status},</if><if test="receiverName != null">receiver_name = #{receiverName},</if><if test="receiverPhone != null">receiver_phone = #{receiverPhone},</if><if test="receiverProvince != null">receiver_province = #{receiverProvince},</if><if test="receiverCity != null">receiver_city = #{receiverCity},</if><if test="receiverDistrict != null">receiver_district = #{receiverDistrict},</if><if test="receiverAddress != null">receiver_address = #{receiverAddress},</if><if test="productAmount != null">product_amount = #{productAmount},</if><if test="freightAmount != null">freight_amount = #{freightAmount},</if><if test="discountAmount != null">discount_amount = #{discountAmount},</if><if test="payableAmount != null">payable_amount = #{payableAmount},</if><if test="paidAmount != null">paid_amount = #{paidAmount},</if><if test="paymentMethod != null">payment_method = #{paymentMethod},</if><if test="remark != null">remark = #{remark},</if><if test="paidAt != null">paid_at = #{paidAt},</if><if test="shippedAt != null">shipped_at = #{shippedAt},</if><if test="completedAt != null">completed_at = #{completedAt},</if><if test="closedAt != null">closed_at = #{closedAt},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM orders WHERE id = #{id}</delete>
+</mapper>

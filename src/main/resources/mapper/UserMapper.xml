@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.UserMapper">
+    <sql id="columns">id, username, phone, email, password_hash, nickname, avatar_url, gender, birthday, status, last_login_at, created_at, updated_at, deleted_at</sql>
+
+    <select id="selectById" resultType="com.itye.mall.entity.User">
+        SELECT <include refid="columns" /> FROM users WHERE id = #{id}
+    </select>
+
+    <select id="selectAll" resultType="com.itye.mall.entity.User">
+        SELECT <include refid="columns" /> FROM users
+    </select>
+
+    <select id="selectByUsername" resultType="com.itye.mall.entity.User">
+        SELECT <include refid="columns" /> FROM users WHERE username = #{username} AND deleted_at IS NULL
+    </select>
+
+    <select id="selectByPhone" resultType="com.itye.mall.entity.User">
+        SELECT <include refid="columns" /> FROM users WHERE phone = #{phone} AND deleted_at IS NULL
+    </select>
+
+    <select id="selectByEmail" resultType="com.itye.mall.entity.User">
+        SELECT <include refid="columns" /> FROM users WHERE email = #{email} AND deleted_at IS NULL
+    </select>
+
+    <select id="selectByAccount" resultType="com.itye.mall.entity.User">
+        SELECT <include refid="columns" />
+        FROM users
+        WHERE deleted_at IS NULL
+          AND (username = #{account} OR phone = #{account} OR email = #{account})
+        LIMIT 1
+    </select>
+
+    <insert id="insert" parameterType="com.itye.mall.entity.User" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="username != null">username,</if>
+            <if test="phone != null">phone,</if>
+            <if test="email != null">email,</if>
+            <if test="passwordHash != null">password_hash,</if>
+            <if test="nickname != null">nickname,</if>
+            <if test="avatarUrl != null">avatar_url,</if>
+            <if test="gender != null">gender,</if>
+            <if test="birthday != null">birthday,</if>
+            <if test="status != null">status,</if>
+            <if test="lastLoginAt != null">last_login_at,</if>
+            <if test="createdAt != null">created_at,</if>
+            <if test="updatedAt != null">updated_at,</if>
+            <if test="deletedAt != null">deleted_at,</if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="username != null">#{username},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="email != null">#{email},</if>
+            <if test="passwordHash != null">#{passwordHash},</if>
+            <if test="nickname != null">#{nickname},</if>
+            <if test="avatarUrl != null">#{avatarUrl},</if>
+            <if test="gender != null">#{gender},</if>
+            <if test="birthday != null">#{birthday},</if>
+            <if test="status != null">#{status},</if>
+            <if test="lastLoginAt != null">#{lastLoginAt},</if>
+            <if test="createdAt != null">#{createdAt},</if>
+            <if test="updatedAt != null">#{updatedAt},</if>
+            <if test="deletedAt != null">#{deletedAt},</if>
+        </trim>
+    </insert>
+
+    <update id="updateById" parameterType="com.itye.mall.entity.User">
+        UPDATE users
+        <set>
+            <if test="username != null">username = #{username},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="passwordHash != null">password_hash = #{passwordHash},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="birthday != null">birthday = #{birthday},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="lastLoginAt != null">last_login_at = #{lastLoginAt},</if>
+            <if test="createdAt != null">created_at = #{createdAt},</if>
+            <if test="updatedAt != null">updated_at = #{updatedAt},</if>
+            <if test="deletedAt != null">deleted_at = #{deletedAt},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM users WHERE id = #{id}
+    </delete>
+</mapper>

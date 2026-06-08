@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.UserAddressMapper">
+    <sql id="columns">id, user_id, receiver_name, receiver_phone, province, city, district, detail_address, postal_code, is_default, created_at, updated_at, deleted_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.UserAddress">SELECT <include refid="columns" /> FROM user_addresses WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.UserAddress">SELECT <include refid="columns" /> FROM user_addresses</select>
+    <select id="selectByUserId" resultType="com.itye.mall.entity.UserAddress">
+        SELECT <include refid="columns" />
+        FROM user_addresses
+        WHERE user_id = #{userId} AND deleted_at IS NULL
+        ORDER BY is_default DESC, id DESC
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.UserAddress" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_addresses
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="userId != null">user_id,</if><if test="receiverName != null">receiver_name,</if><if test="receiverPhone != null">receiver_phone,</if><if test="province != null">province,</if><if test="city != null">city,</if><if test="district != null">district,</if><if test="detailAddress != null">detail_address,</if><if test="postalCode != null">postal_code,</if><if test="isDefault != null">is_default,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if><if test="deletedAt != null">deleted_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="userId != null">#{userId},</if><if test="receiverName != null">#{receiverName},</if><if test="receiverPhone != null">#{receiverPhone},</if><if test="province != null">#{province},</if><if test="city != null">#{city},</if><if test="district != null">#{district},</if><if test="detailAddress != null">#{detailAddress},</if><if test="postalCode != null">#{postalCode},</if><if test="isDefault != null">#{isDefault},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if><if test="deletedAt != null">#{deletedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.UserAddress">
+        UPDATE user_addresses
+        <set><if test="userId != null">user_id = #{userId},</if><if test="receiverName != null">receiver_name = #{receiverName},</if><if test="receiverPhone != null">receiver_phone = #{receiverPhone},</if><if test="province != null">province = #{province},</if><if test="city != null">city = #{city},</if><if test="district != null">district = #{district},</if><if test="detailAddress != null">detail_address = #{detailAddress},</if><if test="postalCode != null">postal_code = #{postalCode},</if><if test="isDefault != null">is_default = #{isDefault},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM user_addresses WHERE id = #{id}</delete>
+    <update id="clearDefaultByUserId">
+        UPDATE user_addresses SET is_default = 0 WHERE user_id = #{userId} AND deleted_at IS NULL
+    </update>
+    <update id="softDeleteByIdAndUserId">
+        UPDATE user_addresses SET deleted_at = NOW(), is_default = 0 WHERE id = #{id} AND user_id = #{userId}
+    </update>
+</mapper>

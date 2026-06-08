@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.CouponMapper">
+    <sql id="columns">id, name, type, face_value, min_order_amount, total_quantity, claimed_quantity, used_quantity, per_user_limit, starts_at, ends_at, status, created_at, updated_at, deleted_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.Coupon">SELECT <include refid="columns" /> FROM coupons WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.Coupon">SELECT <include refid="columns" /> FROM coupons</select>
+    <select id="selectAvailable" resultType="com.itye.mall.entity.Coupon">
+        SELECT <include refid="columns" />
+        FROM coupons
+        WHERE status = 1
+          AND deleted_at IS NULL
+          AND starts_at &lt;= NOW()
+          AND ends_at &gt;= NOW()
+          AND (total_quantity = 0 OR claimed_quantity &lt; total_quantity)
+        ORDER BY id DESC
+    </select>
+    <select id="selectAdminPage" resultType="com.itye.mall.entity.Coupon">
+        SELECT <include refid="columns" />
+        FROM coupons
+        WHERE deleted_at IS NULL
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND name LIKE CONCAT('%', #{keyword}, '%')</if>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAdmin" resultType="long">
+        SELECT COUNT(*)
+        FROM coupons
+        WHERE deleted_at IS NULL
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND name LIKE CONCAT('%', #{keyword}, '%')</if>
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.Coupon" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO coupons
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="name != null">name,</if><if test="type != null">type,</if><if test="faceValue != null">face_value,</if><if test="minOrderAmount != null">min_order_amount,</if><if test="totalQuantity != null">total_quantity,</if><if test="claimedQuantity != null">claimed_quantity,</if><if test="usedQuantity != null">used_quantity,</if><if test="perUserLimit != null">per_user_limit,</if><if test="startsAt != null">starts_at,</if><if test="endsAt != null">ends_at,</if><if test="status != null">status,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if><if test="deletedAt != null">deleted_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="name != null">#{name},</if><if test="type != null">#{type},</if><if test="faceValue != null">#{faceValue},</if><if test="minOrderAmount != null">#{minOrderAmount},</if><if test="totalQuantity != null">#{totalQuantity},</if><if test="claimedQuantity != null">#{claimedQuantity},</if><if test="usedQuantity != null">#{usedQuantity},</if><if test="perUserLimit != null">#{perUserLimit},</if><if test="startsAt != null">#{startsAt},</if><if test="endsAt != null">#{endsAt},</if><if test="status != null">#{status},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if><if test="deletedAt != null">#{deletedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.Coupon">
+        UPDATE coupons
+        <set><if test="name != null">name = #{name},</if><if test="type != null">type = #{type},</if><if test="faceValue != null">face_value = #{faceValue},</if><if test="minOrderAmount != null">min_order_amount = #{minOrderAmount},</if><if test="totalQuantity != null">total_quantity = #{totalQuantity},</if><if test="claimedQuantity != null">claimed_quantity = #{claimedQuantity},</if><if test="usedQuantity != null">used_quantity = #{usedQuantity},</if><if test="perUserLimit != null">per_user_limit = #{perUserLimit},</if><if test="startsAt != null">starts_at = #{startsAt},</if><if test="endsAt != null">ends_at = #{endsAt},</if><if test="status != null">status = #{status},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <update id="increaseClaimedQuantity">
+        UPDATE coupons
+        SET claimed_quantity = claimed_quantity + 1, updated_at = NOW()
+        WHERE id = #{id}
+          AND status = 1
+          AND deleted_at IS NULL
+          AND starts_at &lt;= NOW()
+          AND ends_at &gt;= NOW()
+          AND (total_quantity = 0 OR claimed_quantity &lt; total_quantity)
+    </update>
+    <update id="increaseUsedQuantity">
+        UPDATE coupons
+        SET used_quantity = used_quantity + 1, updated_at = NOW()
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
+    <update id="decreaseUsedQuantity">
+        UPDATE coupons
+        SET used_quantity = used_quantity - 1, updated_at = NOW()
+        WHERE id = #{id}
+          AND used_quantity &gt; 0
+          AND deleted_at IS NULL
+    </update>
+    <delete id="deleteById">UPDATE coupons SET deleted_at = NOW(), updated_at = NOW() WHERE id = #{id}</delete>
+</mapper>

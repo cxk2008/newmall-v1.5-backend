@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.OrderStatusLogMapper">
+    <sql id="columns">id, order_id, old_status, new_status, operator_type, operator_id, note, created_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.OrderStatusLog">SELECT <include refid="columns" /> FROM order_status_logs WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.OrderStatusLog">SELECT <include refid="columns" /> FROM order_status_logs</select>
+    <insert id="insert" parameterType="com.itye.mall.entity.OrderStatusLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_status_logs
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="orderId != null">order_id,</if><if test="oldStatus != null">old_status,</if><if test="newStatus != null">new_status,</if><if test="operatorType != null">operator_type,</if><if test="operatorId != null">operator_id,</if><if test="note != null">note,</if><if test="createdAt != null">created_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="orderId != null">#{orderId},</if><if test="oldStatus != null">#{oldStatus},</if><if test="newStatus != null">#{newStatus},</if><if test="operatorType != null">#{operatorType},</if><if test="operatorId != null">#{operatorId},</if><if test="note != null">#{note},</if><if test="createdAt != null">#{createdAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.OrderStatusLog">
+        UPDATE order_status_logs
+        <set><if test="orderId != null">order_id = #{orderId},</if><if test="oldStatus != null">old_status = #{oldStatus},</if><if test="newStatus != null">new_status = #{newStatus},</if><if test="operatorType != null">operator_type = #{operatorType},</if><if test="operatorId != null">operator_id = #{operatorId},</if><if test="note != null">note = #{note},</if><if test="createdAt != null">created_at = #{createdAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM order_status_logs WHERE id = #{id}</delete>
+</mapper>

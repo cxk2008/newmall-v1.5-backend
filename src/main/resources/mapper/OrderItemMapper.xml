@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.OrderItemMapper">
+    <sql id="columns">id, order_id, order_no, user_id, product_id, sku_id, product_name, sku_name, sku_spec_json, image_url, unit_price, quantity, total_amount, refund_status, created_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.OrderItem">SELECT <include refid="columns" /> FROM order_items WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.OrderItem">SELECT <include refid="columns" /> FROM order_items</select>
+    <select id="selectByOrderId" resultType="com.itye.mall.entity.OrderItem">
+        SELECT <include refid="columns" /> FROM order_items WHERE order_id = #{orderId} ORDER BY id ASC
+    </select>
+    <select id="selectByIdAndUserId" resultType="com.itye.mall.entity.OrderItem">
+        SELECT <include refid="columns" /> FROM order_items WHERE id = #{id} AND user_id = #{userId}
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.OrderItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO order_items
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="orderId != null">order_id,</if><if test="orderNo != null">order_no,</if><if test="userId != null">user_id,</if><if test="productId != null">product_id,</if><if test="skuId != null">sku_id,</if><if test="productName != null">product_name,</if><if test="skuName != null">sku_name,</if><if test="skuSpecJson != null">sku_spec_json,</if><if test="imageUrl != null">image_url,</if><if test="unitPrice != null">unit_price,</if><if test="quantity != null">quantity,</if><if test="totalAmount != null">total_amount,</if><if test="refundStatus != null">refund_status,</if><if test="createdAt != null">created_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="orderId != null">#{orderId},</if><if test="orderNo != null">#{orderNo},</if><if test="userId != null">#{userId},</if><if test="productId != null">#{productId},</if><if test="skuId != null">#{skuId},</if><if test="productName != null">#{productName},</if><if test="skuName != null">#{skuName},</if><if test="skuSpecJson != null">#{skuSpecJson},</if><if test="imageUrl != null">#{imageUrl},</if><if test="unitPrice != null">#{unitPrice},</if><if test="quantity != null">#{quantity},</if><if test="totalAmount != null">#{totalAmount},</if><if test="refundStatus != null">#{refundStatus},</if><if test="createdAt != null">#{createdAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.OrderItem">
+        UPDATE order_items
+        <set><if test="orderId != null">order_id = #{orderId},</if><if test="orderNo != null">order_no = #{orderNo},</if><if test="userId != null">user_id = #{userId},</if><if test="productId != null">product_id = #{productId},</if><if test="skuId != null">sku_id = #{skuId},</if><if test="productName != null">product_name = #{productName},</if><if test="skuName != null">sku_name = #{skuName},</if><if test="skuSpecJson != null">sku_spec_json = #{skuSpecJson},</if><if test="imageUrl != null">image_url = #{imageUrl},</if><if test="unitPrice != null">unit_price = #{unitPrice},</if><if test="quantity != null">quantity = #{quantity},</if><if test="totalAmount != null">total_amount = #{totalAmount},</if><if test="refundStatus != null">refund_status = #{refundStatus},</if><if test="createdAt != null">created_at = #{createdAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM order_items WHERE id = #{id}</delete>
+</mapper>

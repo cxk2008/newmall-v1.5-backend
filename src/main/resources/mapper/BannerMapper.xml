@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.BannerMapper">
+    <sql id="columns">id, title, image_url, link_url, position, sort_order, status, starts_at, ends_at, created_at, updated_at, deleted_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.Banner">SELECT <include refid="columns" /> FROM banners WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.Banner">SELECT <include refid="columns" /> FROM banners</select>
+    <select id="selectVisibleByPosition" resultType="com.itye.mall.entity.Banner">
+        SELECT <include refid="columns" />
+        FROM banners
+        WHERE position = #{position}
+          AND status = 1
+          AND deleted_at IS NULL
+          AND (starts_at IS NULL OR starts_at &lt;= NOW())
+          AND (ends_at IS NULL OR ends_at &gt;= NOW())
+        ORDER BY sort_order ASC, id DESC
+    </select>
+    <select id="selectAdminPage" resultType="com.itye.mall.entity.Banner">
+        SELECT <include refid="columns" />
+        FROM banners
+        WHERE deleted_at IS NULL
+        <if test="position != null and position != ''">AND position = #{position}</if>
+        <if test="status != null">AND status = #{status}</if>
+        ORDER BY sort_order ASC, id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAdmin" resultType="long">
+        SELECT COUNT(*)
+        FROM banners
+        WHERE deleted_at IS NULL
+        <if test="position != null and position != ''">AND position = #{position}</if>
+        <if test="status != null">AND status = #{status}</if>
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.Banner" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO banners
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="title != null">title,</if><if test="imageUrl != null">image_url,</if><if test="linkUrl != null">link_url,</if><if test="position != null">position,</if><if test="sortOrder != null">sort_order,</if><if test="status != null">status,</if><if test="startsAt != null">starts_at,</if><if test="endsAt != null">ends_at,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if><if test="deletedAt != null">deleted_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="title != null">#{title},</if><if test="imageUrl != null">#{imageUrl},</if><if test="linkUrl != null">#{linkUrl},</if><if test="position != null">#{position},</if><if test="sortOrder != null">#{sortOrder},</if><if test="status != null">#{status},</if><if test="startsAt != null">#{startsAt},</if><if test="endsAt != null">#{endsAt},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if><if test="deletedAt != null">#{deletedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.Banner">
+        UPDATE banners
+        <set><if test="title != null">title = #{title},</if><if test="imageUrl != null">image_url = #{imageUrl},</if><if test="linkUrl != null">link_url = #{linkUrl},</if><if test="position != null">position = #{position},</if><if test="sortOrder != null">sort_order = #{sortOrder},</if><if test="status != null">status = #{status},</if><if test="startsAt != null">starts_at = #{startsAt},</if><if test="endsAt != null">ends_at = #{endsAt},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <update id="updateAdminById" parameterType="com.itye.mall.entity.Banner">
+        UPDATE banners
+        SET title = #{title},
+            image_url = #{imageUrl},
+            link_url = #{linkUrl},
+            position = #{position},
+            sort_order = #{sortOrder},
+            status = #{status},
+            starts_at = #{startsAt},
+            ends_at = #{endsAt},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">UPDATE banners SET deleted_at = NOW(), updated_at = NOW() WHERE id = #{id}</delete>
+</mapper>

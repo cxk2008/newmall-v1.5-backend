@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.RefundMapper">
+    <sql id="columns">id, refund_no, order_id, order_item_id, user_id, amount, reason, status, handled_by, handled_at, refunded_at, created_at, updated_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.Refund">SELECT <include refid="columns" /> FROM refunds WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.Refund">SELECT <include refid="columns" /> FROM refunds</select>
+    <select id="selectByUserIdPage" resultType="com.itye.mall.entity.Refund">
+        SELECT <include refid="columns" />
+        FROM refunds
+        WHERE user_id = #{userId}
+        <if test="status != null">AND status = #{status}</if>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countByUserId" resultType="long">
+        SELECT COUNT(*)
+        FROM refunds
+        WHERE user_id = #{userId}
+        <if test="status != null">AND status = #{status}</if>
+    </select>
+    <select id="selectAdminPage" resultType="com.itye.mall.entity.Refund">
+        SELECT <include refid="columns" />
+        FROM refunds
+        WHERE 1 = 1
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND (refund_no LIKE CONCAT('%', #{keyword}, '%') OR reason LIKE CONCAT('%', #{keyword}, '%'))</if>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAdmin" resultType="long">
+        SELECT COUNT(*)
+        FROM refunds
+        WHERE 1 = 1
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND (refund_no LIKE CONCAT('%', #{keyword}, '%') OR reason LIKE CONCAT('%', #{keyword}, '%'))</if>
+    </select>
+    <select id="selectByOrderItemId" resultType="com.itye.mall.entity.Refund">
+        SELECT <include refid="columns" /> FROM refunds WHERE order_item_id = #{orderItemId} ORDER BY id DESC LIMIT 1
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.Refund" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO refunds
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="refundNo != null">refund_no,</if><if test="orderId != null">order_id,</if><if test="orderItemId != null">order_item_id,</if><if test="userId != null">user_id,</if><if test="amount != null">amount,</if><if test="reason != null">reason,</if><if test="status != null">status,</if><if test="handledBy != null">handled_by,</if><if test="handledAt != null">handled_at,</if><if test="refundedAt != null">refunded_at,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="refundNo != null">#{refundNo},</if><if test="orderId != null">#{orderId},</if><if test="orderItemId != null">#{orderItemId},</if><if test="userId != null">#{userId},</if><if test="amount != null">#{amount},</if><if test="reason != null">#{reason},</if><if test="status != null">#{status},</if><if test="handledBy != null">#{handledBy},</if><if test="handledAt != null">#{handledAt},</if><if test="refundedAt != null">#{refundedAt},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.Refund">
+        UPDATE refunds
+        <set><if test="refundNo != null">refund_no = #{refundNo},</if><if test="orderId != null">order_id = #{orderId},</if><if test="orderItemId != null">order_item_id = #{orderItemId},</if><if test="userId != null">user_id = #{userId},</if><if test="amount != null">amount = #{amount},</if><if test="reason != null">reason = #{reason},</if><if test="status != null">status = #{status},</if><if test="handledBy != null">handled_by = #{handledBy},</if><if test="handledAt != null">handled_at = #{handledAt},</if><if test="refundedAt != null">refunded_at = #{refundedAt},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM refunds WHERE id = #{id}</delete>
+</mapper>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.ProductCategoryMapper">
+    <sql id="columns">id, parent_id, name, icon_url, banner_url, sort_order, level, status, created_at, updated_at, deleted_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.ProductCategory">SELECT <include refid="columns" /> FROM product_categories WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.ProductCategory">SELECT <include refid="columns" /> FROM product_categories</select>
+    <select id="selectEnabled" resultType="com.itye.mall.entity.ProductCategory">
+        SELECT <include refid="columns" />
+        FROM product_categories
+        WHERE status = 1 AND deleted_at IS NULL
+        ORDER BY sort_order ASC, id ASC
+    </select>
+    <select id="selectByParentId" resultType="com.itye.mall.entity.ProductCategory">
+        SELECT <include refid="columns" />
+        FROM product_categories
+        WHERE status = 1 AND deleted_at IS NULL
+        <choose>
+            <when test="parentId == null">AND parent_id IS NULL</when>
+            <otherwise>AND parent_id = #{parentId}</otherwise>
+        </choose>
+        ORDER BY sort_order ASC, id ASC
+    </select>
+    <select id="selectAdminPage" resultType="com.itye.mall.entity.ProductCategory">
+        SELECT <include refid="columns" />
+        FROM product_categories
+        WHERE deleted_at IS NULL
+        <choose>
+            <when test="parentId == null"></when>
+            <otherwise>AND parent_id = #{parentId}</otherwise>
+        </choose>
+        <if test="status != null">AND status = #{status}</if>
+        ORDER BY sort_order ASC, id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAdmin" resultType="long">
+        SELECT COUNT(*)
+        FROM product_categories
+        WHERE deleted_at IS NULL
+        <choose>
+            <when test="parentId == null"></when>
+            <otherwise>AND parent_id = #{parentId}</otherwise>
+        </choose>
+        <if test="status != null">AND status = #{status}</if>
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.ProductCategory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product_categories
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="parentId != null">parent_id,</if><if test="name != null">name,</if><if test="iconUrl != null">icon_url,</if><if test="bannerUrl != null">banner_url,</if><if test="sortOrder != null">sort_order,</if><if test="level != null">level,</if><if test="status != null">status,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if><if test="deletedAt != null">deleted_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="parentId != null">#{parentId},</if><if test="name != null">#{name},</if><if test="iconUrl != null">#{iconUrl},</if><if test="bannerUrl != null">#{bannerUrl},</if><if test="sortOrder != null">#{sortOrder},</if><if test="level != null">#{level},</if><if test="status != null">#{status},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if><if test="deletedAt != null">#{deletedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.ProductCategory">
+        UPDATE product_categories
+        <set><if test="parentId != null">parent_id = #{parentId},</if><if test="name != null">name = #{name},</if><if test="iconUrl != null">icon_url = #{iconUrl},</if><if test="bannerUrl != null">banner_url = #{bannerUrl},</if><if test="sortOrder != null">sort_order = #{sortOrder},</if><if test="level != null">level = #{level},</if><if test="status != null">status = #{status},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <update id="updateAdminById" parameterType="com.itye.mall.entity.ProductCategory">
+        UPDATE product_categories
+        SET parent_id = #{parentId},
+            name = #{name},
+            icon_url = #{iconUrl},
+            banner_url = #{bannerUrl},
+            sort_order = #{sortOrder},
+            level = #{level},
+            status = #{status},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">UPDATE product_categories SET deleted_at = NOW(), updated_at = NOW() WHERE id = #{id}</delete>
+</mapper>

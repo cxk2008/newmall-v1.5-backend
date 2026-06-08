@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.ProductMapper">
+    <sql id="columns">id, category_id, brand_id, spu_code, name, subtitle, main_image_url, detail_html, unit, price_min, price_max, sales_count, view_count, sort_order, status, published_at, created_at, updated_at, deleted_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.Product">SELECT <include refid="columns" /> FROM products WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.Product">SELECT <include refid="columns" /> FROM products</select>
+    <select id="selectOnSaleById" resultType="com.itye.mall.entity.Product">
+        SELECT <include refid="columns" /> FROM products WHERE id = #{id} AND status = 2 AND deleted_at IS NULL
+    </select>
+    <select id="selectOnSalePage" resultType="com.itye.mall.entity.Product">
+        SELECT <include refid="columns" />
+        FROM products
+        WHERE status = 2 AND deleted_at IS NULL
+        <if test="categoryId != null">AND category_id = #{categoryId}</if>
+        <if test="keyword != null and keyword != ''">AND (name LIKE CONCAT('%', #{keyword}, '%') OR subtitle LIKE CONCAT('%', #{keyword}, '%'))</if>
+        ORDER BY sort_order ASC, id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countOnSale" resultType="long">
+        SELECT COUNT(*)
+        FROM products
+        WHERE status = 2 AND deleted_at IS NULL
+        <if test="categoryId != null">AND category_id = #{categoryId}</if>
+        <if test="keyword != null and keyword != ''">AND (name LIKE CONCAT('%', #{keyword}, '%') OR subtitle LIKE CONCAT('%', #{keyword}, '%'))</if>
+    </select>
+    <update id="incrementViewCount">
+        UPDATE products SET view_count = view_count + 1 WHERE id = #{id}
+    </update>
+    <select id="selectAdminPage" resultType="com.itye.mall.entity.Product">
+        SELECT <include refid="columns" />
+        FROM products
+        WHERE deleted_at IS NULL
+        <if test="categoryId != null">AND category_id = #{categoryId}</if>
+        <if test="brandId != null">AND brand_id = #{brandId}</if>
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND (name LIKE CONCAT('%', #{keyword}, '%') OR spu_code LIKE CONCAT('%', #{keyword}, '%'))</if>
+        ORDER BY sort_order ASC, id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAdmin" resultType="long">
+        SELECT COUNT(*)
+        FROM products
+        WHERE deleted_at IS NULL
+        <if test="categoryId != null">AND category_id = #{categoryId}</if>
+        <if test="brandId != null">AND brand_id = #{brandId}</if>
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND (name LIKE CONCAT('%', #{keyword}, '%') OR spu_code LIKE CONCAT('%', #{keyword}, '%'))</if>
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.Product" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO products
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="categoryId != null">category_id,</if><if test="brandId != null">brand_id,</if><if test="spuCode != null">spu_code,</if><if test="name != null">name,</if><if test="subtitle != null">subtitle,</if><if test="mainImageUrl != null">main_image_url,</if><if test="detailHtml != null">detail_html,</if><if test="unit != null">unit,</if><if test="priceMin != null">price_min,</if><if test="priceMax != null">price_max,</if><if test="salesCount != null">sales_count,</if><if test="viewCount != null">view_count,</if><if test="sortOrder != null">sort_order,</if><if test="status != null">status,</if><if test="publishedAt != null">published_at,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if><if test="deletedAt != null">deleted_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="categoryId != null">#{categoryId},</if><if test="brandId != null">#{brandId},</if><if test="spuCode != null">#{spuCode},</if><if test="name != null">#{name},</if><if test="subtitle != null">#{subtitle},</if><if test="mainImageUrl != null">#{mainImageUrl},</if><if test="detailHtml != null">#{detailHtml},</if><if test="unit != null">#{unit},</if><if test="priceMin != null">#{priceMin},</if><if test="priceMax != null">#{priceMax},</if><if test="salesCount != null">#{salesCount},</if><if test="viewCount != null">#{viewCount},</if><if test="sortOrder != null">#{sortOrder},</if><if test="status != null">#{status},</if><if test="publishedAt != null">#{publishedAt},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if><if test="deletedAt != null">#{deletedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.Product">
+        UPDATE products
+        <set><if test="categoryId != null">category_id = #{categoryId},</if><if test="brandId != null">brand_id = #{brandId},</if><if test="spuCode != null">spu_code = #{spuCode},</if><if test="name != null">name = #{name},</if><if test="subtitle != null">subtitle = #{subtitle},</if><if test="mainImageUrl != null">main_image_url = #{mainImageUrl},</if><if test="detailHtml != null">detail_html = #{detailHtml},</if><if test="unit != null">unit = #{unit},</if><if test="priceMin != null">price_min = #{priceMin},</if><if test="priceMax != null">price_max = #{priceMax},</if><if test="salesCount != null">sales_count = #{salesCount},</if><if test="viewCount != null">view_count = #{viewCount},</if><if test="sortOrder != null">sort_order = #{sortOrder},</if><if test="status != null">status = #{status},</if><if test="publishedAt != null">published_at = #{publishedAt},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <update id="updateAdminById" parameterType="com.itye.mall.entity.Product">
+        UPDATE products
+        SET category_id = #{categoryId},
+            brand_id = #{brandId},
+            spu_code = #{spuCode},
+            name = #{name},
+            subtitle = #{subtitle},
+            main_image_url = #{mainImageUrl},
+            detail_html = #{detailHtml},
+            unit = #{unit},
+            sort_order = #{sortOrder},
+            status = #{status},
+            published_at = #{publishedAt},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">UPDATE products SET deleted_at = NOW(), updated_at = NOW() WHERE id = #{id}</delete>
+</mapper>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.AdminUserMapper">
+    <sql id="columns">id, username, password_hash, real_name, phone, email, role, status, last_login_at, created_at, updated_at, deleted_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.AdminUser">SELECT <include refid="columns" /> FROM admin_users WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.AdminUser">SELECT <include refid="columns" /> FROM admin_users</select>
+    <select id="selectByUsername" resultType="com.itye.mall.entity.AdminUser">
+        SELECT <include refid="columns" /> FROM admin_users WHERE username = #{username} AND deleted_at IS NULL
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.AdminUser" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO admin_users
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="username != null">username,</if><if test="passwordHash != null">password_hash,</if><if test="realName != null">real_name,</if><if test="phone != null">phone,</if><if test="email != null">email,</if><if test="role != null">role,</if><if test="status != null">status,</if><if test="lastLoginAt != null">last_login_at,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if><if test="deletedAt != null">deleted_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="username != null">#{username},</if><if test="passwordHash != null">#{passwordHash},</if><if test="realName != null">#{realName},</if><if test="phone != null">#{phone},</if><if test="email != null">#{email},</if><if test="role != null">#{role},</if><if test="status != null">#{status},</if><if test="lastLoginAt != null">#{lastLoginAt},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if><if test="deletedAt != null">#{deletedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.AdminUser">
+        UPDATE admin_users
+        <set><if test="username != null">username = #{username},</if><if test="passwordHash != null">password_hash = #{passwordHash},</if><if test="realName != null">real_name = #{realName},</if><if test="phone != null">phone = #{phone},</if><if test="email != null">email = #{email},</if><if test="role != null">role = #{role},</if><if test="status != null">status = #{status},</if><if test="lastLoginAt != null">last_login_at = #{lastLoginAt},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM admin_users WHERE id = #{id}</delete>
+</mapper>

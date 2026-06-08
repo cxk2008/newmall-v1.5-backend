@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.ProductImageMapper">
+    <sql id="columns">id, product_id, sku_id, image_url, sort_order, created_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.ProductImage">SELECT <include refid="columns" /> FROM product_images WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.ProductImage">SELECT <include refid="columns" /> FROM product_images</select>
+    <select id="selectByProductId" resultType="com.itye.mall.entity.ProductImage">
+        SELECT <include refid="columns" /> FROM product_images WHERE product_id = #{productId} ORDER BY sort_order ASC, id ASC
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.ProductImage" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO product_images
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="productId != null">product_id,</if><if test="skuId != null">sku_id,</if><if test="imageUrl != null">image_url,</if><if test="sortOrder != null">sort_order,</if><if test="createdAt != null">created_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="productId != null">#{productId},</if><if test="skuId != null">#{skuId},</if><if test="imageUrl != null">#{imageUrl},</if><if test="sortOrder != null">#{sortOrder},</if><if test="createdAt != null">#{createdAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.ProductImage">
+        UPDATE product_images
+        <set><if test="productId != null">product_id = #{productId},</if><if test="skuId != null">sku_id = #{skuId},</if><if test="imageUrl != null">image_url = #{imageUrl},</if><if test="sortOrder != null">sort_order = #{sortOrder},</if><if test="createdAt != null">created_at = #{createdAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM product_images WHERE id = #{id}</delete>
+</mapper>
