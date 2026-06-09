@@ -1,6 +1,7 @@
 package com.itye.mall.service;
 
 import com.itye.mall.common.constant.OrderStatus;
+import com.itye.mall.common.id.BusinessNoGenerator;
 import com.itye.mall.common.response.PageResult;
 import com.itye.mall.common.util.PageUtils;
 import com.itye.mall.dto.order.CreateOrderRequest;
@@ -24,17 +25,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 import com.itye.mall.vo.order.OrderItemVO;
 import com.itye.mall.vo.order.OrderVO;
 
 @Service
 public class OrderService {
-    private static final DateTimeFormatter ORDER_NO_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
-
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
     private final OrderStatusLogMapper orderStatusLogMapper;
@@ -45,6 +42,7 @@ public class OrderService {
     private final ProductService productService;
     private final InventoryService inventoryService;
     private final CouponService couponService;
+    private final BusinessNoGenerator businessNoGenerator;
 
     public OrderService(OrderMapper orderMapper,
                         OrderItemMapper orderItemMapper,
@@ -55,7 +53,8 @@ public class OrderService {
                         UserAddressService userAddressService,
                         ProductService productService,
                         InventoryService inventoryService,
-                        CouponService couponService) {
+                        CouponService couponService,
+                        BusinessNoGenerator businessNoGenerator) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.orderStatusLogMapper = orderStatusLogMapper;
@@ -66,6 +65,7 @@ public class OrderService {
         this.productService = productService;
         this.inventoryService = inventoryService;
         this.couponService = couponService;
+        this.businessNoGenerator = businessNoGenerator;
     }
 
     @Transactional
@@ -86,13 +86,14 @@ public class OrderService {
         CouponService.CouponUsage couponUsage = couponService.calculateUsage(userId, request.getUserCouponId(), productAmount);
         BigDecimal discountAmount = couponUsage.discountAmount();
         BigDecimal payableAmount = productAmount.add(freightAmount).subtract(discountAmount);
-        String orderNo = generateOrderNo();
+        String orderNo = businessNoGenerator.generateOrderNo();
         LocalDateTime now = LocalDateTime.now();
 
         Order order = Order.builder()
                 .orderNo(orderNo)
                 .userId(userId)
                 .status(OrderStatus.PENDING_PAY)
+                .sourceType(1)
                 .receiverName(address.getReceiverName())
                 .receiverPhone(address.getReceiverPhone())
                 .receiverProvince(address.getProvince())
@@ -239,11 +240,6 @@ public class OrderService {
 
     private List<OrderItemVO> loadItems(Long orderId) {
         return orderItemMapper.selectByOrderId(orderId).stream().map(OrderItemVO::from).toList();
-    }
-
-    private String generateOrderNo() {
-        return "O" + LocalDateTime.now().format(ORDER_NO_TIME_FORMAT)
-                + ThreadLocalRandom.current().nextInt(1000, 10000);
     }
 
     private record OrderLine(Product product, ProductSku sku, Integer quantity) {

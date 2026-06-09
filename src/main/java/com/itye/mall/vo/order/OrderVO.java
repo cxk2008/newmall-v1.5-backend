@@ -14,6 +14,8 @@ public class OrderVO {
     private Long id;
     private String orderNo;
     private Integer status;
+    private Integer sourceType;
+    private Long sourceId;
     private String receiverName;
     private String receiverPhone;
     private String receiverProvince;
@@ -38,6 +40,8 @@ public class OrderVO {
                 .id(order.getId())
                 .orderNo(order.getOrderNo())
                 .status(order.getStatus())
+                .sourceType(order.getSourceType())
+                .sourceId(order.getSourceId())
                 .receiverName(order.getReceiverName())
                 .receiverPhone(order.getReceiverPhone())
                 .receiverProvince(order.getReceiverProvince())

@@ -1,6 +1,6 @@
 # 商城数据库表说明
 
-本文档说明 `database_schema.sql` 中各张 MySQL 表的职责、核心字段含义和主要业务关系。当前数据库面向一个标准 B2C 商城，覆盖用户、商品、购物车、订单、支付、物流、营销、评价和后台运营等模块。
+本文档说明 `database_schema.sql` 和 `seckill_schema.sql` 中各张 MySQL 表的职责、核心字段含义和主要业务关系。当前数据库面向一个标准 B2C 商城，覆盖用户、商品、购物车、订单、支付、物流、营销、秒杀、评价和后台运营等模块。
 
 ## 一、整体设计说明
 
@@ -14,6 +14,7 @@
 - 需要软删除的数据表包含 `deleted_at` 字段。
 - 商品、订单、支付、退款等核心业务表都保留业务编号，例如 `spu_code`、`sku_code`、`order_no`、`payment_no`、`refund_no`。
 - 商品详情、规格、回调报文、评论图片等半结构化内容使用 `JSON` 或 `TEXT` 类型存储。
+- 秒杀相关表由 `seckill_schema.sql` 作为升级脚本维护，避免把高并发活动逻辑直接塞进通用商品或优惠券表。
 
 ## 二、用户与权限模块
 
@@ -237,6 +238,8 @@
 - `order_no`：订单编号，唯一。
 - `user_id`：下单用户。
 - `status`：订单状态。
+- `source_type`：订单来源，`1` 普通订单，`2` 秒杀订单。
+- `source_id`：来源业务 ID，例如秒杀订单关系表 `seckill_orders.id`。
 - `receiver_name`、`receiver_phone`、`receiver_province`、`receiver_city`、`receiver_district`、`receiver_address`：收货地址快照。
 - `product_amount`：商品总金额。
 - `freight_amount`：运费。
@@ -435,9 +438,85 @@
 - `status`：状态，`1` 启用，`2` 禁用。
 - `starts_at`、`ends_at`：展示时间范围。
 
-## 八、评价模块
+## 八、秒杀模块
 
-### 24. `product_reviews` 商品评价表
+秒杀模块由 `seckill_schema.sql` 新增，主要用于支持限时高并发抢购活动。设计上将活动、活动商品和秒杀下单资格单独建表，避免影响普通商品、普通订单和优惠券模型。
+
+### 24. `seckill_activities` 秒杀活动表
+
+存储秒杀活动主信息，例如活动名称、开始结束时间、状态和预热时间。
+
+主要字段：
+
+- `name`：活动名称。
+- `description`：活动说明。
+- `starts_at`、`ends_at`：活动开始和结束时间。
+- `status`：活动状态，`1` 草稿，`2` 已发布，`3` 进行中，`4` 已结束，`5` 已关闭。
+- `warm_up_at`：活动预热到 Redis 的时间。
+- `created_by`：创建活动的管理员 ID。
+
+索引说明：
+
+- `status + starts_at + ends_at` 适合查询当前可用活动。
+- `created_by` 便于后台按管理员追踪活动创建记录。
+
+### 25. `seckill_items` 秒杀活动商品表
+
+存储某个秒杀活动下的具体 SKU、秒杀价格、活动库存和限购规则。
+
+主要字段：
+
+- `activity_id`：所属秒杀活动。
+- `product_id`：商品 SPU ID。
+- `sku_id`：商品 SKU ID。
+- `seckill_price`：秒杀价，前端不能自行传入价格，下单时以后端活动配置为准。
+- `seckill_stock`：活动总库存。
+- `available_stock`：数据库侧剩余活动库存，用于消息消费端最终校验和扣减。
+- `limit_per_user`：每个用户限购数量，第一版建议固定为 1。
+- `sort_order`：排序值。
+- `status`：状态，`1` 启用，`2` 禁用。
+
+约束说明：
+
+- `activity_id + sku_id` 唯一，防止同一活动重复配置同一个 SKU。
+- `available_stock <= seckill_stock`，防止剩余活动库存大于活动总库存。
+
+典型用途：
+
+- 活动发布时将秒杀商品和库存预热到 Redis。
+- 用户抢购时扣减 Redis 秒杀库存。
+- RocketMQ 消费端创建订单时扣减数据库侧 `available_stock`，作为最终一致校验。
+
+### 26. `seckill_orders` 秒杀订单关系表
+
+记录用户秒杀请求、下单资格、最终订单关系和消费幂等状态。
+
+主要字段：
+
+- `request_no`：秒杀请求号，唯一，用于接口返回、前端轮询结果和 MQ 消费幂等。
+- `activity_id`：秒杀活动 ID。
+- `seckill_item_id`：秒杀活动商品 ID。
+- `user_id`：抢购用户 ID。
+- `order_id`：异步创建成功后的商城订单 ID。
+- `order_no`：异步创建成功后的商城订单编号。
+- `status`：秒杀订单状态，`10` 处理中，`20` 下单成功，`30` 下单失败，`40` 已取消。
+- `failure_reason`：失败原因，便于用户提示和后台排查。
+
+约束说明：
+
+- `request_no` 唯一，保证 RocketMQ 消息重复消费时不会重复创建订单。
+- `activity_id + seckill_item_id + user_id` 唯一，保证同一用户对同一活动商品只能成功抢购一次。
+
+典型流程：
+
+- Redis 扣减成功后生成 `request_no`，写入处理中结果，并发送 RocketMQ 消息。
+- 消费者收到消息后插入或检查 `seckill_orders` 幂等记录。
+- 订单创建成功后回填 `order_id` 和 `order_no`，并将状态改为下单成功。
+- 订单创建失败时记录失败原因，必要时触发库存补偿。
+
+## 九、评价模块
+
+### 27. `product_reviews` 商品评价表
 
 存储用户对已购买商品的评价。
 
@@ -462,9 +541,9 @@
 - 后台评价审核。
 - 商家回复用户评价。
 
-## 九、后台运营日志模块
+## 十、后台运营日志模块
 
-### 25. `operation_logs` 后台操作日志表
+### 28. `operation_logs` 后台操作日志表
 
 记录管理员在后台的关键操作。
 
@@ -484,7 +563,7 @@
 - 排查误操作。
 - 记录敏感动作，例如改价、退款、发货。
 
-## 十、核心业务关系
+## 十一、核心业务关系
 
 ### 商品关系
 
@@ -511,6 +590,7 @@
 - `orders` 1 对 1 `shipments`
 - `orders` 1 对多 `refunds`
 - `order_items` 1 对 0/1 `product_reviews`
+- `orders.source_type + source_id` 可关联秒杀、拼团等来源业务
 
 ### 营销关系
 
@@ -518,12 +598,24 @@
 - `users` 1 对多 `user_coupons`
 - `orders` 1 对 0/1 或 1 对多 `user_coupons`，取决于后续业务是否允许一单多券
 
-## 十一、后续开发建议
+### 秒杀关系
+
+- `admin_users` 1 对多 `seckill_activities`
+- `seckill_activities` 1 对多 `seckill_items`
+- `products` 1 对多 `seckill_items`
+- `product_skus` 1 对多 `seckill_items`
+- `seckill_activities` 1 对多 `seckill_orders`
+- `seckill_items` 1 对多 `seckill_orders`
+- `users` 1 对多 `seckill_orders`
+- `seckill_orders` 0/1 对 1 `orders`
+
+## 十二、后续开发建议
 
 1. 后端实体类可以直接按表拆分，但订单创建、支付回调、库存扣减建议放在事务服务中统一处理。
-2. 订单号、支付单号、退款单号不要使用数据库自增 ID 直接暴露给前端，建议生成带日期和随机数的业务编号。
+2. 订单号、支付单号、退款单号不要使用数据库自增 ID 直接暴露给前端，建议统一使用业务编号生成器，例如雪花 ID。
 3. 库存扣减需要重点处理并发问题，建议使用 SQL 条件扣减或乐观锁策略。
 4. 订单地址、商品名称、SKU 规格、商品价格必须保存快照，历史订单不能依赖商品当前数据。
 5. 如果后期要支持多商户，可以在商品、订单、退款、结算等表中增加 `merchant_id`。
-6. 如果后期要支持秒杀、拼团等活动，建议单独增加活动表，不要把所有营销逻辑塞进 `coupons`。
-
+6. 秒杀活动建议继续通过独立活动表维护，不要把秒杀价格、秒杀库存直接写进普通 `products` 或 `product_skus`。
+7. 秒杀库存需要同时关注 Redis 预扣减和 MySQL 最终扣减，必须设计补偿任务处理 MQ 发送失败、消费失败和长时间处理中状态。
+8. `orders.source_type` 后续可以继续扩展拼团、预售等订单来源，但每种来源都应有独立业务表保存来源上下文。

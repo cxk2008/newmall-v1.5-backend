@@ -17,6 +17,8 @@ public class Order {
     private String orderNo;
     private Long userId;
     private Integer status;
+    private Integer sourceType;
+    private Long sourceId;
     private String receiverName;
     private String receiverPhone;
     private String receiverProvince;
