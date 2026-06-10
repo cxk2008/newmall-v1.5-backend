@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.SeckillOrderMapper">
+    <sql id="columns">id, request_no, activity_id, seckill_item_id, user_id, order_id, order_no, status, failure_reason, created_at, updated_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.SeckillOrder">SELECT <include refid="columns" /> FROM seckill_orders WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.SeckillOrder">SELECT <include refid="columns" /> FROM seckill_orders</select>
+    <select id="selectByRequestNo" resultType="com.itye.mall.entity.SeckillOrder">
+        SELECT <include refid="columns" /> FROM seckill_orders WHERE request_no = #{requestNo}
+    </select>
+    <select id="selectByRequestNoAndUserId" resultType="com.itye.mall.entity.SeckillOrder">
+        SELECT <include refid="columns" /> FROM seckill_orders WHERE request_no = #{requestNo} AND user_id = #{userId}
+    </select>
+    <select id="selectByUserItem" resultType="com.itye.mall.entity.SeckillOrder">
+        SELECT <include refid="columns" />
+        FROM seckill_orders
+        WHERE activity_id = #{activityId}
+          AND seckill_item_id = #{seckillItemId}
+          AND user_id = #{userId}
+        LIMIT 1
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.SeckillOrder" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO seckill_orders
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="requestNo != null">request_no,</if><if test="activityId != null">activity_id,</if><if test="seckillItemId != null">seckill_item_id,</if><if test="userId != null">user_id,</if><if test="orderId != null">order_id,</if><if test="orderNo != null">order_no,</if><if test="status != null">status,</if><if test="failureReason != null">failure_reason,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="requestNo != null">#{requestNo},</if><if test="activityId != null">#{activityId},</if><if test="seckillItemId != null">#{seckillItemId},</if><if test="userId != null">#{userId},</if><if test="orderId != null">#{orderId},</if><if test="orderNo != null">#{orderNo},</if><if test="status != null">#{status},</if><if test="failureReason != null">#{failureReason},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.SeckillOrder">
+        UPDATE seckill_orders
+        <set><if test="requestNo != null">request_no = #{requestNo},</if><if test="activityId != null">activity_id = #{activityId},</if><if test="seckillItemId != null">seckill_item_id = #{seckillItemId},</if><if test="userId != null">user_id = #{userId},</if><if test="orderId != null">order_id = #{orderId},</if><if test="orderNo != null">order_no = #{orderNo},</if><if test="status != null">status = #{status},</if><if test="failureReason != null">failure_reason = #{failureReason},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <update id="markOrderCreated">
+        UPDATE seckill_orders
+        SET order_id = #{orderId},
+            order_no = #{orderNo},
+            status = 20,
+            failure_reason = NULL,
+            updated_at = NOW()
+        WHERE request_no = #{requestNo}
+          AND status = 10
+    </update>
+    <update id="markFailed">
+        UPDATE seckill_orders
+        SET status = 30,
+            failure_reason = #{failureReason},
+            updated_at = NOW()
+        WHERE request_no = #{requestNo}
+          AND status = 10
+    </update>
+    <delete id="deleteById">DELETE FROM seckill_orders WHERE id = #{id}</delete>
+</mapper>

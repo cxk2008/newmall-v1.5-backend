@@ -46,6 +46,7 @@ rocketmq:
     send-message-timeout: 3000
     retry-times-when-send-failed: 2
 
+
 server:
   port: 8080
 

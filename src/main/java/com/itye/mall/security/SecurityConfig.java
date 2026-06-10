@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/admin/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**", "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/banners/**", "/api/coupons/available").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/seckill/activities/**", "/api/seckill/items/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

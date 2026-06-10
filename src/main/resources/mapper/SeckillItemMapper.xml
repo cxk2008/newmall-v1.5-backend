@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.SeckillItemMapper">
+    <sql id="columns">id, activity_id, product_id, sku_id, seckill_price, seckill_stock, available_stock, limit_per_user, sort_order, status, created_at, updated_at, deleted_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.SeckillItem">SELECT <include refid="columns" /> FROM seckill_items WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.SeckillItem">SELECT <include refid="columns" /> FROM seckill_items</select>
+    <select id="selectByActivityId" resultType="com.itye.mall.entity.SeckillItem">
+        SELECT <include refid="columns" />
+        FROM seckill_items
+        WHERE activity_id = #{activityId} AND deleted_at IS NULL
+        ORDER BY sort_order ASC, id ASC
+    </select>
+    <select id="selectEnabledByActivityId" resultType="com.itye.mall.entity.SeckillItem">
+        SELECT <include refid="columns" />
+        FROM seckill_items
+        WHERE activity_id = #{activityId} AND status = 1 AND deleted_at IS NULL
+        ORDER BY sort_order ASC, id ASC
+    </select>
+    <select id="selectByActivityIdAndSkuId" resultType="com.itye.mall.entity.SeckillItem">
+        SELECT <include refid="columns" />
+        FROM seckill_items
+        WHERE activity_id = #{activityId} AND sku_id = #{skuId} AND deleted_at IS NULL
+        LIMIT 1
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.SeckillItem" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO seckill_items
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="activityId != null">activity_id,</if><if test="productId != null">product_id,</if><if test="skuId != null">sku_id,</if><if test="seckillPrice != null">seckill_price,</if><if test="seckillStock != null">seckill_stock,</if><if test="availableStock != null">available_stock,</if><if test="limitPerUser != null">limit_per_user,</if><if test="sortOrder != null">sort_order,</if><if test="status != null">status,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if><if test="deletedAt != null">deleted_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="activityId != null">#{activityId},</if><if test="productId != null">#{productId},</if><if test="skuId != null">#{skuId},</if><if test="seckillPrice != null">#{seckillPrice},</if><if test="seckillStock != null">#{seckillStock},</if><if test="availableStock != null">#{availableStock},</if><if test="limitPerUser != null">#{limitPerUser},</if><if test="sortOrder != null">#{sortOrder},</if><if test="status != null">#{status},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if><if test="deletedAt != null">#{deletedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.SeckillItem">
+        UPDATE seckill_items
+        <set><if test="activityId != null">activity_id = #{activityId},</if><if test="productId != null">product_id = #{productId},</if><if test="skuId != null">sku_id = #{skuId},</if><if test="seckillPrice != null">seckill_price = #{seckillPrice},</if><if test="seckillStock != null">seckill_stock = #{seckillStock},</if><if test="availableStock != null">available_stock = #{availableStock},</if><if test="limitPerUser != null">limit_per_user = #{limitPerUser},</if><if test="sortOrder != null">sort_order = #{sortOrder},</if><if test="status != null">status = #{status},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <update id="updateAdminById" parameterType="com.itye.mall.entity.SeckillItem">
+        UPDATE seckill_items
+        SET seckill_price = #{seckillPrice},
+            seckill_stock = #{seckillStock},
+            available_stock = #{availableStock},
+            limit_per_user = #{limitPerUser},
+            sort_order = #{sortOrder},
+            status = #{status},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
+    <update id="decreaseAvailableStock">
+        UPDATE seckill_items
+        SET available_stock = available_stock - #{quantity},
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND status = 1
+          AND deleted_at IS NULL
+          AND available_stock >= #{quantity}
+    </update>
+    <update id="increaseAvailableStock">
+        UPDATE seckill_items
+        SET available_stock = available_stock + #{quantity},
+            updated_at = NOW()
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+          AND available_stock + #{quantity} &lt;= seckill_stock
+    </update>
+    <delete id="deleteById">UPDATE seckill_items SET deleted_at = NOW(), updated_at = NOW() WHERE id = #{id}</delete>
+</mapper>

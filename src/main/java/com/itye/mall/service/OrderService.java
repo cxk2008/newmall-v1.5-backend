@@ -1,10 +1,12 @@
 package com.itye.mall.service;
 
 import com.itye.mall.common.constant.OrderStatus;
+import com.itye.mall.common.constant.OrderSourceType;
 import com.itye.mall.common.id.BusinessNoGenerator;
 import com.itye.mall.common.response.PageResult;
 import com.itye.mall.common.util.PageUtils;
 import com.itye.mall.dto.order.CreateOrderRequest;
+import com.itye.mall.mq.SeckillOrderMessage;
 import com.itye.mall.entity.CartItem;
 import com.itye.mall.entity.Order;
 import com.itye.mall.entity.OrderItem;
@@ -93,7 +95,7 @@ public class OrderService {
                 .orderNo(orderNo)
                 .userId(userId)
                 .status(OrderStatus.PENDING_PAY)
-                .sourceType(1)
+                .sourceType(OrderSourceType.NORMAL)
                 .receiverName(address.getReceiverName())
                 .receiverPhone(address.getReceiverPhone())
                 .receiverProvince(address.getProvince())
@@ -139,6 +141,62 @@ public class OrderService {
         }
         writeStatusLog(order.getId(), null, OrderStatus.PENDING_PAY, 1, userId, "用户创建订单");
         return OrderVO.from(order, itemResponses);
+    }
+
+    @Transactional
+    public OrderVO createSeckillOrder(Long seckillOrderId, SeckillOrderMessage message) {
+        List<UserAddress> addresses = userAddressService.list(message.getUserId());
+        if (addresses.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "请先添加收货地址");
+        }
+        UserAddress address = addresses.getFirst();
+        Product product = productService.requireOnSaleProduct(message.getProductId());
+        ProductSku sku = productService.requireEnabledSku(message.getSkuId());
+        BigDecimal productAmount = message.getSeckillPrice().multiply(BigDecimal.valueOf(message.getQuantity()));
+        String orderNo = businessNoGenerator.generateOrderNo();
+        LocalDateTime now = LocalDateTime.now();
+
+        Order order = Order.builder()
+                .orderNo(orderNo)
+                .userId(message.getUserId())
+                .status(OrderStatus.PENDING_PAY)
+                .sourceType(OrderSourceType.SECKILL)
+                .sourceId(seckillOrderId)
+                .receiverName(address.getReceiverName())
+                .receiverPhone(address.getReceiverPhone())
+                .receiverProvince(address.getProvince())
+                .receiverCity(address.getCity())
+                .receiverDistrict(address.getDistrict())
+                .receiverAddress(address.getDetailAddress())
+                .productAmount(productAmount)
+                .freightAmount(BigDecimal.ZERO)
+                .discountAmount(BigDecimal.ZERO)
+                .payableAmount(productAmount)
+                .paidAmount(BigDecimal.ZERO)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+        orderMapper.insert(order);
+
+        OrderItem item = OrderItem.builder()
+                .orderId(order.getId())
+                .orderNo(orderNo)
+                .userId(message.getUserId())
+                .productId(product.getId())
+                .skuId(sku.getId())
+                .productName(product.getName())
+                .skuName(sku.getName())
+                .skuSpecJson(sku.getSpecJson())
+                .imageUrl(sku.getImageUrl() != null ? sku.getImageUrl() : product.getMainImageUrl())
+                .unitPrice(message.getSeckillPrice())
+                .quantity(message.getQuantity())
+                .totalAmount(productAmount)
+                .refundStatus(0)
+                .createdAt(now)
+                .build();
+        orderItemMapper.insert(item);
+        writeStatusLog(order.getId(), null, OrderStatus.PENDING_PAY, 3, null, "秒杀异步创建订单");
+        return OrderVO.from(order, List.of(OrderItemVO.from(item)));
     }
 
     public PageResult<OrderVO> list(Long userId, Integer status, Integer pageNum, Integer pageSize) {

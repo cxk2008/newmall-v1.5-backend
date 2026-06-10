@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.itye.mall.mapper.SeckillActivityMapper">
+    <sql id="columns">id, name, description, starts_at, ends_at, status, warm_up_at, created_by, created_at, updated_at, deleted_at</sql>
+    <select id="selectById" resultType="com.itye.mall.entity.SeckillActivity">SELECT <include refid="columns" /> FROM seckill_activities WHERE id = #{id}</select>
+    <select id="selectAll" resultType="com.itye.mall.entity.SeckillActivity">SELECT <include refid="columns" /> FROM seckill_activities</select>
+    <select id="selectAdminPage" resultType="com.itye.mall.entity.SeckillActivity">
+        SELECT <include refid="columns" />
+        FROM seckill_activities
+        WHERE deleted_at IS NULL
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND name LIKE CONCAT('%', #{keyword}, '%')</if>
+        ORDER BY starts_at DESC, id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+    <select id="countAdmin" resultType="long">
+        SELECT COUNT(*)
+        FROM seckill_activities
+        WHERE deleted_at IS NULL
+        <if test="status != null">AND status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND name LIKE CONCAT('%', #{keyword}, '%')</if>
+    </select>
+    <select id="selectCurrent" resultType="com.itye.mall.entity.SeckillActivity">
+        SELECT <include refid="columns" />
+        FROM seckill_activities
+        WHERE deleted_at IS NULL
+          AND status IN (2, 3)
+          AND starts_at &lt;= #{now}
+          AND ends_at &gt;= #{now}
+        ORDER BY starts_at ASC, id DESC
+        LIMIT 1
+    </select>
+    <insert id="insert" parameterType="com.itye.mall.entity.SeckillActivity" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO seckill_activities
+        <trim prefix="(" suffix=")" suffixOverrides=","><if test="name != null">name,</if><if test="description != null">description,</if><if test="startsAt != null">starts_at,</if><if test="endsAt != null">ends_at,</if><if test="status != null">status,</if><if test="warmUpAt != null">warm_up_at,</if><if test="createdBy != null">created_by,</if><if test="createdAt != null">created_at,</if><if test="updatedAt != null">updated_at,</if><if test="deletedAt != null">deleted_at,</if></trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=","><if test="name != null">#{name},</if><if test="description != null">#{description},</if><if test="startsAt != null">#{startsAt},</if><if test="endsAt != null">#{endsAt},</if><if test="status != null">#{status},</if><if test="warmUpAt != null">#{warmUpAt},</if><if test="createdBy != null">#{createdBy},</if><if test="createdAt != null">#{createdAt},</if><if test="updatedAt != null">#{updatedAt},</if><if test="deletedAt != null">#{deletedAt},</if></trim>
+    </insert>
+    <update id="updateById" parameterType="com.itye.mall.entity.SeckillActivity">
+        UPDATE seckill_activities
+        <set><if test="name != null">name = #{name},</if><if test="description != null">description = #{description},</if><if test="startsAt != null">starts_at = #{startsAt},</if><if test="endsAt != null">ends_at = #{endsAt},</if><if test="status != null">status = #{status},</if><if test="warmUpAt != null">warm_up_at = #{warmUpAt},</if><if test="createdBy != null">created_by = #{createdBy},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
+        WHERE id = #{id}
+    </update>
+    <update id="updateStatus">
+        UPDATE seckill_activities
+        SET status = #{status},
+            warm_up_at = #{warmUpAt},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+          AND deleted_at IS NULL
+    </update>
+    <delete id="deleteById">UPDATE seckill_activities SET deleted_at = NOW(), updated_at = NOW() WHERE id = #{id}</delete>
+</mapper>

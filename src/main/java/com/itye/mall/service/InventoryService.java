@@ -108,6 +108,7 @@ public class InventoryService {
                 .bizType(bizType)
                 .bizId(bizId)
                 .note(note)
+                .createdAt(java.time.LocalDateTime.now())
                 .build());
     }
 }
