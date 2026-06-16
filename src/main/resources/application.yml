@@ -63,3 +63,14 @@ mall:
   snowflake:
     worker-id: 1
     datacenter-id: 1
+  elasticsearch:
+    enabled: true
+    host: 114.132.186.190
+    port: 9200
+    scheme: http
+    username: elastic
+    password: FTGFxrizSjeYR5LC
+    connect-timeout-millis: 3000
+    socket-timeout-millis: 30000
+    index-init-enabled: true
+    product-index: mall_products
