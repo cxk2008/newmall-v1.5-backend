@@ -35,7 +35,7 @@ public class ProductController {
     public ApiResponse<PageResult<ProductListItemVO>> search(@RequestParam String keyword,
                                                            @RequestParam(required = false) Integer pageNum,
                                                            @RequestParam(required = false) Integer pageSize) {
-        return ApiResponse.ok(productService.list(null, keyword, pageNum, pageSize));
+        return ApiResponse.ok(productService.search(keyword, pageNum, pageSize));
     }
 
     @GetMapping("/{id}")

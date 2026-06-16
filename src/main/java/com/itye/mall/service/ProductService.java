@@ -1,11 +1,11 @@
 package com.itye.mall.service;
 
 import com.itye.mall.common.response.PageResult;
-import com.itye.mall.common.util.PageUtils;
 import com.itye.mall.entity.Product;
 import com.itye.mall.entity.ProductAttributeValue;
 import com.itye.mall.entity.ProductImage;
 import com.itye.mall.entity.ProductSku;
+import com.itye.mall.es.service.ProductSearchEsService;
 import com.itye.mall.mapper.ProductAttributeValueMapper;
 import com.itye.mall.mapper.ProductImageMapper;
 import com.itye.mall.mapper.ProductMapper;
@@ -25,33 +25,26 @@ public class ProductService {
     private final ProductSkuMapper productSkuMapper;
     private final ProductImageMapper productImageMapper;
     private final ProductAttributeValueMapper productAttributeValueMapper;
+    private final ProductSearchEsService productSearchEsService;
 
     public ProductService(ProductMapper productMapper,
                           ProductSkuMapper productSkuMapper,
                           ProductImageMapper productImageMapper,
-                          ProductAttributeValueMapper productAttributeValueMapper) {
+                          ProductAttributeValueMapper productAttributeValueMapper,
+                          ProductSearchEsService productSearchEsService) {
         this.productMapper = productMapper;
         this.productSkuMapper = productSkuMapper;
         this.productImageMapper = productImageMapper;
         this.productAttributeValueMapper = productAttributeValueMapper;
+        this.productSearchEsService = productSearchEsService;
     }
 
     public PageResult<ProductListItemVO> list(Long categoryId, String keyword, Integer pageNum, Integer pageSize) {
-        int normalizedPageNum = PageUtils.normalizePageNum(pageNum);
-        int normalizedPageSize = PageUtils.normalizePageSize(pageSize);
-        List<ProductListItemVO> records = productMapper.selectOnSalePage(
-                categoryId,
-                keyword,
-                PageUtils.offset(normalizedPageNum, normalizedPageSize),
-                normalizedPageSize
-        ).stream().map(ProductListItemVO::from).toList();
-        long total = productMapper.countOnSale(categoryId, keyword);
-        return PageResult.<ProductListItemVO>builder()
-                .total(total)
-                .pageNum(normalizedPageNum)
-                .pageSize(normalizedPageSize)
-                .records(records)
-                .build();
+        return productSearchEsService.list(categoryId, keyword, pageNum, pageSize);
+    }
+
+    public PageResult<ProductListItemVO> search(String keyword, Integer pageNum, Integer pageSize) {
+        return productSearchEsService.list(null, keyword, pageNum, pageSize);
     }
 
     public ProductDetailVO detail(Long id) {
