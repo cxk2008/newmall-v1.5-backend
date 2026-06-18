@@ -16,12 +16,15 @@ import com.itye.mall.mapper.ProductCategoryMapper;
 import com.itye.mall.mapper.ProductImageMapper;
 import com.itye.mall.mapper.ProductMapper;
 import com.itye.mall.mapper.ProductSkuMapper;
+import com.itye.mall.mq.ProductEsSyncProducer;
 import com.itye.mall.vo.admin.AdminProductListItemVO;
 import com.itye.mall.vo.product.ProductDetailVO;
 import com.itye.mall.vo.product.ProductSkuVO;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -44,19 +47,22 @@ public class AdminProductService {
     private final BrandMapper brandMapper;
     private final ProductImageMapper productImageMapper;
     private final ProductAttributeValueMapper productAttributeValueMapper;
+    private final ProductEsSyncProducer productEsSyncProducer;
 
     public AdminProductService(ProductMapper productMapper,
                                ProductSkuMapper productSkuMapper,
                                ProductCategoryMapper productCategoryMapper,
                                BrandMapper brandMapper,
                                ProductImageMapper productImageMapper,
-                               ProductAttributeValueMapper productAttributeValueMapper) {
+                               ProductAttributeValueMapper productAttributeValueMapper,
+                               ProductEsSyncProducer productEsSyncProducer) {
         this.productMapper = productMapper;
         this.productSkuMapper = productSkuMapper;
         this.productCategoryMapper = productCategoryMapper;
         this.brandMapper = brandMapper;
         this.productImageMapper = productImageMapper;
         this.productAttributeValueMapper = productAttributeValueMapper;
+        this.productEsSyncProducer = productEsSyncProducer;
     }
 
     public PageResult<AdminProductListItemVO> list(Long categoryId,
@@ -123,6 +129,7 @@ public class AdminProductService {
                 .updatedAt(now)
                 .build();
         productMapper.insert(product);
+        sendProductEsSyncAfterCommit(product.getId());
         return detail(product.getId());
     }
 
@@ -153,6 +160,7 @@ public class AdminProductService {
                 .build();
         productMapper.updateAdminById(update);
         refreshPriceRange(id);
+        sendProductEsSyncAfterCommit(id);
         return detail(id);
     }
 
@@ -167,6 +175,7 @@ public class AdminProductService {
                 .updatedAt(LocalDateTime.now())
                 .build());
         refreshPriceRange(id);
+        sendProductEsSyncAfterCommit(id);
         return detail(id);
     }
 
@@ -178,12 +187,15 @@ public class AdminProductService {
                 .status(PRODUCT_OFF_SALE)
                 .updatedAt(LocalDateTime.now())
                 .build());
+        sendProductEsSyncAfterCommit(id);
         return detail(id);
     }
 
+    @Transactional
     public void delete(Long id) {
         requireProduct(id);
         productMapper.deleteById(id);
+        sendProductEsSyncAfterCommit(id);
     }
 
     public List<ProductSkuVO> listSkus(Long productId) {
@@ -215,6 +227,7 @@ public class AdminProductService {
                 .build();
         productSkuMapper.insert(sku);
         refreshPriceRange(productId);
+        sendProductEsSyncAfterCommit(productId);
         return ProductSkuVO.from(requireSku(sku.getId()));
     }
 
@@ -241,13 +254,32 @@ public class AdminProductService {
                 .build();
         productSkuMapper.updateById(update);
         refreshPriceRange(existing.getProductId());
+        sendProductEsSyncAfterCommit(existing.getProductId());
         return ProductSkuVO.from(requireSku(id));
     }
 
+    @Transactional
     public void deleteSku(Long id) {
         ProductSku sku = requireSku(id);
         productSkuMapper.deleteById(id);
         refreshPriceRange(sku.getProductId());
+        sendProductEsSyncAfterCommit(sku.getProductId());
+    }
+
+    private void sendProductEsSyncAfterCommit(Long productId) {
+        if (productId == null) {
+            return;
+        }
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            productEsSyncProducer.sendSync(productId);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                productEsSyncProducer.sendSync(productId);
+            }
+        });
     }
 
     private Product requireProduct(Long id) {
