@@ -1,5 +1,9 @@
 package com.itye.mall.es.document;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.itye.mall.entity.Brand;
 import com.itye.mall.entity.Product;
 import com.itye.mall.entity.ProductAttributeValue;

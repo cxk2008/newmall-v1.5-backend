@@ -4,6 +4,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -47,8 +48,8 @@ public class ElasticsearchConfig {
     }
 
     @Bean(destroyMethod = "close")
-    public ElasticsearchTransport elasticsearchTransport(RestClient elasticsearchRestClient) {
-        return new RestClientTransport(elasticsearchRestClient, new JacksonJsonpMapper());
+    public ElasticsearchTransport elasticsearchTransport(RestClient elasticsearchRestClient, ObjectMapper objectMapper) {
+        return new RestClientTransport(elasticsearchRestClient, new JacksonJsonpMapper(objectMapper));
     }
 
     @Bean
