@@ -38,7 +38,7 @@ redisson:
     retry-interval: 1500
 
 rocketmq:
-  name-server: 114.132.186.190:9876
+  name-server: localhost:9876
   producer:
     group: mall-producer-group
 #    access-key:
