@@ -6,6 +6,7 @@ import com.itye.mall.common.id.BusinessNoGenerator;
 import com.itye.mall.common.response.PageResult;
 import com.itye.mall.common.util.PageUtils;
 import com.itye.mall.dto.order.CreateOrderRequest;
+import com.itye.mall.mq.OrderTimeoutProducer;
 import com.itye.mall.mq.SeckillOrderMessage;
 import com.itye.mall.entity.CartItem;
 import com.itye.mall.entity.Order;
@@ -23,6 +24,8 @@ import com.itye.mall.mapper.ProductSkuMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
@@ -45,6 +48,7 @@ public class OrderService {
     private final InventoryService inventoryService;
     private final CouponService couponService;
     private final BusinessNoGenerator businessNoGenerator;
+    private final OrderTimeoutProducer orderTimeoutProducer;
 
     public OrderService(OrderMapper orderMapper,
                         OrderItemMapper orderItemMapper,
@@ -56,7 +60,8 @@ public class OrderService {
                         ProductService productService,
                         InventoryService inventoryService,
                         CouponService couponService,
-                        BusinessNoGenerator businessNoGenerator) {
+                        BusinessNoGenerator businessNoGenerator,
+                        OrderTimeoutProducer orderTimeoutProducer) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.orderStatusLogMapper = orderStatusLogMapper;
@@ -68,6 +73,7 @@ public class OrderService {
         this.inventoryService = inventoryService;
         this.couponService = couponService;
         this.businessNoGenerator = businessNoGenerator;
+        this.orderTimeoutProducer = orderTimeoutProducer;
     }
 
     @Transactional
@@ -140,6 +146,7 @@ public class OrderService {
             cartItemMapper.deleteSelectedByUserId(userId);
         }
         writeStatusLog(order.getId(), null, OrderStatus.PENDING_PAY, 1, userId, "用户创建订单");
+        sendTimeoutCancelAfterCommit(order.getId(), order.getOrderNo());
         return OrderVO.from(order, itemResponses);
     }
 
@@ -196,6 +203,7 @@ public class OrderService {
                 .build();
         orderItemMapper.insert(item);
         writeStatusLog(order.getId(), null, OrderStatus.PENDING_PAY, 3, null, "秒杀异步创建订单");
+        sendTimeoutCancelAfterCommit(order.getId(), order.getOrderNo());
         return OrderVO.from(order, List.of(OrderItemVO.from(item)));
     }
 
@@ -241,6 +249,25 @@ public class OrderService {
                 .build());
         writeStatusLog(order.getId(), OrderStatus.PENDING_PAY, OrderStatus.CLOSED, 1, userId, "用户取消订单");
         return detail(userId, id);
+    }
+
+    @Transactional
+    public void cancelTimeoutOrder(Long orderId, String orderNo) {
+        Order order = orderMapper.selectByIdAndOrderNo(orderId, orderNo);
+        if (order == null || !Integer.valueOf(OrderStatus.PENDING_PAY).equals(order.getStatus())) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now();
+        int updated = orderMapper.closePendingPayById(order.getId(), now, now);
+        if (updated != 1) {
+            return;
+        }
+        List<OrderItem> items = orderItemMapper.selectByOrderId(order.getId());
+        for (OrderItem item : items) {
+            inventoryService.unlockStock(item.getSkuId(), item.getQuantity(), "order_timeout", order.getOrderNo());
+        }
+        couponService.releaseByOrder(order.getId());
+        writeStatusLog(order.getId(), OrderStatus.PENDING_PAY, OrderStatus.CLOSED, 3, null, "订单超时未支付自动关闭");
     }
 
     public Order requireUserOrder(Long userId, Long id) {
@@ -298,6 +325,19 @@ public class OrderService {
 
     private List<OrderItemVO> loadItems(Long orderId) {
         return orderItemMapper.selectByOrderId(orderId).stream().map(OrderItemVO::from).toList();
+    }
+
+    private void sendTimeoutCancelAfterCommit(Long orderId, String orderNo) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            orderTimeoutProducer.sendCancelMessage(orderId, orderNo);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                orderTimeoutProducer.sendCancelMessage(orderId, orderNo);
+            }
+        });
     }
 
     private record OrderLine(Product product, ProductSku sku, Integer quantity) {

@@ -63,6 +63,8 @@ mall:
   snowflake:
     worker-id: 1
     datacenter-id: 1
+  order:
+    timeout-delay-millis: 900000
   elasticsearch:
     enabled: true
     host: 114.132.186.190

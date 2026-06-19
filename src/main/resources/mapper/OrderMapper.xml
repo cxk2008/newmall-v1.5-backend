@@ -7,6 +7,13 @@
     <select id="selectByIdAndUserId" resultType="com.itye.mall.entity.Order">
         SELECT <include refid="columns" /> FROM orders WHERE id = #{id} AND user_id = #{userId} AND deleted_at IS NULL
     </select>
+    <select id="selectByIdAndOrderNo" resultType="com.itye.mall.entity.Order">
+        SELECT <include refid="columns" />
+        FROM orders
+        WHERE id = #{id}
+          AND order_no = #{orderNo}
+          AND deleted_at IS NULL
+    </select>
     <select id="selectByUserIdPage" resultType="com.itye.mall.entity.Order">
         SELECT <include refid="columns" />
         FROM orders
@@ -46,6 +53,15 @@
         UPDATE orders
         <set><if test="orderNo != null">order_no = #{orderNo},</if><if test="userId != null">user_id = #{userId},</if><if test="status != null">status = #{status},</if><if test="sourceType != null">source_type = #{sourceType},</if><if test="sourceId != null">source_id = #{sourceId},</if><if test="receiverName != null">receiver_name = #{receiverName},</if><if test="receiverPhone != null">receiver_phone = #{receiverPhone},</if><if test="receiverProvince != null">receiver_province = #{receiverProvince},</if><if test="receiverCity != null">receiver_city = #{receiverCity},</if><if test="receiverDistrict != null">receiver_district = #{receiverDistrict},</if><if test="receiverAddress != null">receiver_address = #{receiverAddress},</if><if test="productAmount != null">product_amount = #{productAmount},</if><if test="freightAmount != null">freight_amount = #{freightAmount},</if><if test="discountAmount != null">discount_amount = #{discountAmount},</if><if test="payableAmount != null">payable_amount = #{payableAmount},</if><if test="paidAmount != null">paid_amount = #{paidAmount},</if><if test="paymentMethod != null">payment_method = #{paymentMethod},</if><if test="remark != null">remark = #{remark},</if><if test="paidAt != null">paid_at = #{paidAt},</if><if test="shippedAt != null">shipped_at = #{shippedAt},</if><if test="completedAt != null">completed_at = #{completedAt},</if><if test="closedAt != null">closed_at = #{closedAt},</if><if test="createdAt != null">created_at = #{createdAt},</if><if test="updatedAt != null">updated_at = #{updatedAt},</if><if test="deletedAt != null">deleted_at = #{deletedAt},</if></set>
         WHERE id = #{id}
+    </update>
+    <update id="closePendingPayById">
+        UPDATE orders
+        SET status = 50,
+            closed_at = #{closedAt},
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+          AND status = 10
+          AND deleted_at IS NULL
     </update>
     <delete id="deleteById">DELETE FROM orders WHERE id = #{id}</delete>
 </mapper>

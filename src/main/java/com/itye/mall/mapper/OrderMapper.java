@@ -9,6 +9,8 @@ import java.util.List;
 public interface OrderMapper extends BaseMapper<Order> {
     Order selectByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
+    Order selectByIdAndOrderNo(@Param("id") Long id, @Param("orderNo") String orderNo);
+
     List<Order> selectByUserIdPage(@Param("userId") Long userId,
                                    @Param("status") Integer status,
                                    @Param("offset") Integer offset,
@@ -22,4 +24,8 @@ public interface OrderMapper extends BaseMapper<Order> {
                                 @Param("pageSize") Integer pageSize);
 
     long countAdmin(@Param("status") Integer status, @Param("keyword") String keyword);
+
+    int closePendingPayById(@Param("id") Long id,
+                            @Param("closedAt") java.time.LocalDateTime closedAt,
+                            @Param("updatedAt") java.time.LocalDateTime updatedAt);
 }
