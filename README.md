@@ -1,4 +1,6 @@
 # newmall 商城后端
+项目前端:https://github.com/cxk2008/newmall-v2.0
+项目后端:https://github.com/cxk2008/newmall-v1.5-backend
 
 基于 Spring Boot 3 + MyBatis 的 B2C 商城后端服务，覆盖用户、商品、购物车、订单、支付、物流、营销优惠券、秒杀、评价与后台管理等模块。秒杀链路使用 Redis + Redisson + RocketMQ 实现高并发下的削峰与异步下单，商品检索接入 Elasticsearch。
 
